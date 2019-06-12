@@ -1,13 +1,6 @@
 
 
-from yt.data_objects.grid_patch import \
-    AMRGridPatch
-from yt.geometry.grid_geometry_handler import \
-    GridIndex
-from yt.data_objects.static_output import \
-    Dataset
-
-class niiGrid(AMRGridPatch):
+class niftiGrid(AMRGridPatch):
     id_offset = 0
 
     def __init__(self, id, index, level, dimensions):
@@ -21,11 +14,11 @@ class niiGrid(AMRGridPatch):
     def __repr__(self):
         return "niiGrid_%04i (%s)" % (self.id, self.ActiveDimensions)
 
-class niiDataset(Dataset):
+class niftiDataset(Dataset):
     _index_class = SkeletonHierarchy
     _field_info_class = SkeletonFieldInfo
 
-    def __init__(self, filename, dataset_type='skeleton',
+    def __init__(self, filename, dataset_type='nifti',
                  storage_filename=None,
                  units_override=None):
         self.fluid_types += ('skeleton',)
@@ -61,12 +54,31 @@ class niiDataset(Dataset):
         #   self.unique_identifier      <= unique identifier for the dataset
         #                                  being read (e.g., UUID or ST_CTIME)
         #   self.parameters             <= full of code-specific items of use
+
+        file = nib.load("self")
+        image_vals = file.get_fdata()
+        self.parameters = image_vals
+
+        header = self.header
+
         #   self.domain_left_edge       <= array of float64
+
+
+
         #   self.domain_right_edge      <= array of float64
         #   self.dimensionality         <= int
+
+        self.dimensionality = image_vals.ndim
+
         #   self.domain_dimensions      <= array of int64
         #   self.periodicity            <= three-element tuple of booleans 0
+
+        self.periodicity = 0
+
         #   self.current_time           <= simulation time in code units 0
+
+        self.current_time = 0
+
         #
         # We also set up cosmological information.  Set these to zero if
         # non-cosmological.
@@ -84,7 +96,13 @@ class niiDataset(Dataset):
         # unqiue MRI file format identifier
         try:
             if "nii" in args:
-                # looking for identifier in file name
+                file = nibabel.load("args")
+                header = file.get_header
+                array = file.get_fdata("args")
+                if header == None:
+                    return False
+                if array =
+                file.close()
                 return True
             else:
                 return False
