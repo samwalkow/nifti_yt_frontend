@@ -57,9 +57,11 @@ class niftiDataset(Dataset):
 
         file = nib.load("self")
         image_vals = file.get_fdata()
+        # is where I store the numpy arrays?
+        # or should this be the header values?
         self.parameters = image_vals
 
-        header = self.header
+        self.header = file.get_header
 
         #   self.domain_left_edge       <= array of float64
 
@@ -71,6 +73,9 @@ class niftiDataset(Dataset):
         self.dimensionality = image_vals.ndim
 
         #   self.domain_dimensions      <= array of int64
+
+        self.domain_dimensions = image_vals.shape
+
         #   self.periodicity            <= three-element tuple of booleans 0
 
         self.periodicity = 0
@@ -88,6 +93,13 @@ class niftiDataset(Dataset):
         #   self.omega_lambda               <= float
         #   self.omega_matter               <= float
         #   self.hubble_constant            <= float
+
+        self.cosmological_simulation =  0
+        self.current_redshift  = 0
+        self.omega_lambda = 0
+        self.omega_matter = 0
+        self.hubble_constant = 0
+
         pass
 
 
