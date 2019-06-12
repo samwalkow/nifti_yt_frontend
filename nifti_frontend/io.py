@@ -17,7 +17,7 @@ from yt.utilities.io_handler import \
     BaseIOHandler
 
 
-class SkeletonIOHandler(BaseIOHandler):
+class NiftiIOHandler(BaseIOHandler):
     _particle_reader = False
     _dataset_type = 'skeleton'
 

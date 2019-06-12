@@ -14,12 +14,12 @@ API for Nifti frontend
 #-----------------------------------------------------------------------------
 
 from .data_structures import \
-      SkeletonGrid, \
-      SkeletonHierarchy, \
-      SkeletonDataset
+      NiftiGrid, \
+      NiftiHierarchy, \
+      NiftiDataset
 
 from .fields import \
-      SkeletonFieldInfo
+      NiftiFieldInfo
 
 from .io import \
-      SkeletonIOHandler
+      NiftiIOHandler
