@@ -97,7 +97,7 @@ class NiftiDataset(Dataset):
         # should be set, along with examples of how to set them to standard
         # values.
         #
-        # self.length_unit = self.quan(1.0, "cm")
+
         self.mass_unit = self.quan(1.0, "g")
         self.time_unit = self.quan(1.0, "s")
         # self.time_unit = self.quan(1.0, "s")
@@ -130,14 +130,15 @@ class NiftiDataset(Dataset):
 
         xsize, ysize, zsize, _ = (np.abs(_) for _ in fid.header.get_best_affine()[:, 3])
 
-        self.domain_left_edge = np.array([xsize, ysize, zsize])
+
+        self.domain_left_edge = np.array([-xsize, -ysize, -zsize])
         self.domain_right_edge = np.array([xsize, ysize, zsize])
         self.dimensionality = 3
         self.domain_dimensions = fid.shape
         self.periodicity = 0
         self.current_time = 0
-        self.cosmological_simulation =  0
-        self.current_redshift  = 0
+        self.cosmological_simulation = 0
+        self.current_redshift = 0
         self.omega_lambda = 0
         self.omega_matter = 0
         self.hubble_constant = 0
