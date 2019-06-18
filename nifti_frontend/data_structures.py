@@ -24,7 +24,7 @@ class NiftiGrid(AMRGridPatch):
 
 
     def __repr__(self):
-        return "niiGrid_%04i (%s)" % (self.id, self.ActiveDimensions)
+        return "niftiGrid_%04i (%s)" % (self.id, self.ActiveDimensions)
 
 class NiftiHierarchy(GridIndex):
     grid = NiftiGrid
@@ -47,11 +47,11 @@ class NiftiHierarchy(GridIndex):
         # fluid type or particle type.  Convention suggests that the on-disk
         # fluid type is usually the dataset_type and the on-disk particle type
         # (for a single population of particles) is "io".
-        pass
+        self.field_list = [("scan", "intensity")]
 
     def _count_grids(self):
         # This needs to set self.num_grids
-        pass
+        self.num_grids = 1
 
     def _parse_index(self):
         # This needs to fill the following arrays, where N is self.num_grids:
@@ -62,18 +62,20 @@ class NiftiHierarchy(GridIndex):
         #   self.grid_levels            (N, 1) <= int
         #   self.grids                  (N, 1) <= grid objects
         #   self.max_level = self.grid_levels.max()
-        pass
+        self.grid_left_edge[:] = [0.0, 0.0, 0.0]
+        self.grid_right_edge[:] = [1.0, 1.0, 1.0]
+        self.grid_dimensions[:] = self.dataset.domain_dimensions
+        self.grid_levels[:] = 0
+        self.max_level = 0
+        self.grids = np.empty(self.num_grids, dtype='object')
+        self.grids[0] = self.grid(0, self, 0, self.grid_dimensions[:,0])
 
     def _populate_grid_objects(self):
-        # For each grid g, this must call:
-        #   g._prepare_grid()
-        #   g._setup_dx()
-        # This must also set:
-        #   g.Children <= list of child grids
-        #   g.Parent   <= parent grid
-        # This is handled by the frontend because often the children must be
-        # identified.
-        pass
+        for g in self.grids:
+            g._prepare_grid()
+            g._setup_dx()
+            g.Children = []
+            g.Parent = None
 
 class NiftiDataset(Dataset):
     _index_class = NiftiHierarchy
@@ -122,6 +124,8 @@ class NiftiDataset(Dataset):
         # or should this be the header values?
         self.parameters = {}
         self.parameters.update(fid.get_header())
+
+        self.file_handle = fid
         self.header = fid.get_header()
 
         xsize, ysize, zsize, _ = (np.abs(_) for _ in fid.header.get_best_affine()[:, 3])
@@ -147,4 +151,3 @@ class NiftiDataset(Dataset):
             return args[0].endswith(".nii") or args[0].endswith(".nii.gz")
         except:
             pass
-

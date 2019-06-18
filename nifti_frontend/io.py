@@ -13,13 +13,17 @@ Skeleton-specific IO functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+from yt.funcs import \
+    mylog
+
 from yt.utilities.io_handler import \
     BaseIOHandler
 
 
 class NiftiIOHandler(BaseIOHandler):
     _particle_reader = False
-    _dataset_type = 'skeleton'
+    _dataset_type = 'nifti'
 
     def _read_particle_coords(self, chunks, ptf):
         # This needs to *yield* a series of tuples of (ptype, (x, y, z)).
@@ -49,7 +53,29 @@ class NiftiIOHandler(BaseIOHandler):
         # Fortran-like input array with the dimension (z,y,x), a matrix
         # transpose is required (e.g., using np_array.transpose() or
         # np_array.swapaxes(0,2)).
-        pass
+        chunks = list(chunks)
+        if any((ftype not in self.ds.fluid_types for ftype, fname in fields)):
+            raise NotImplementedError
+        rv = {}
+        for field in fields:
+            rv[field] = self.ds.arr(np.empty(size, dtype="float64"))
+
+        ng = sum(len(c.objs) for c in chunks)
+        mylog.debug("Reading %s cells of %s fields in %s blocks",
+                    size, [f2 for f1, f2 in fields], ng)
+        for field in fields:
+            if field != ("scan", "intensity"):
+                raise NotImplementedError
+            ftype, fname = field
+            ind = 0
+            for chunk in chunks:
+                for g in chunk.objs:
+                    if g.id != 0:
+                        raise NotImplementedError
+                    ds = self.ds.file_handle.get_data().astype("f8")
+                    ind += g.select(selector, ds, rv[field], ind) # caches
+        return rv
+
 
     def _read_chunk_data(self, chunk, fields):
         # This reads the data from a single chunk without doing any selection,
