@@ -22,13 +22,14 @@ class NiftiGrid(AMRGridPatch):
         self.Level = level
         self.ActiveDimensions = dimensions
 
+
     def __repr__(self):
         return "niiGrid_%04i (%s)" % (self.id, self.ActiveDimensions)
 
 class NiftiHierarchy(GridIndex):
     grid = NiftiGrid
 
-    def __init__(self, ds, dataset_type='skeleton'):
+    def __init__(self, ds, dataset_type='nifti'):
         self.dataset_type = dataset_type
         self.dataset = weakref.proxy(ds)
         # for now, the index file is the dataset!
@@ -37,6 +38,7 @@ class NiftiHierarchy(GridIndex):
         # float type for the simulation edges and must be float64 now
         self.float_type = np.float64
         super(NiftiHierarchy, self).__init__(ds, dataset_type)
+
 
     def _detect_output_fields(self):
         # This needs to set a self.field_list that contains all the available,
@@ -92,8 +94,6 @@ class NiftiDataset(Dataset):
         # on-disk units.  These are the currently available quantities which
         # should be set, along with examples of how to set them to standard
         # values.
-        # set to unitary
-        # set to 1
         #
         # self.length_unit = self.quan(1.0, "cm")
         self.mass_unit = self.quan(1.0, "g")
@@ -114,57 +114,24 @@ class NiftiDataset(Dataset):
         # will be converted to YTArray automatically at a later time.
         # This includes the cosmological parameters.
 
-        # set to UUID
-        #
         self.unique_identifier = None
-        #                                  being read (e.g., UUID or ST_CTIME)
-        #   self.parameters             <= full of code-specific items of use
 
-        # just grab the header
         fid = nib.load(self.parameter_filename)
 
         # is where I store the numpy arrays?
         # or should this be the header values?
         self.parameters = {}
         self.parameters.update(fid.get_header())
-
         self.header = fid.get_header()
 
+        xsize, ysize, zsize, _ = (np.abs(_) for _ in fid.header.get_best_affine()[:, 3])
 
-        #   self.domain_left_edge       <= array of float64
-
-        self.domain_left_edge = np.array([0,0,0])
-
-        #   self.domain_right_edge      <= array of float64
-
-        self.domain_right_edge = np.array([1,1,1])
-
-        #   self.dimensionality         <= int
-
+        self.domain_left_edge = np.array([xsize, ysize, zsize])
+        self.domain_right_edge = np.array([xsize, ysize, zsize])
         self.dimensionality = 3
-
-        #   self.domain_dimensions      <= array of int64
-
         self.domain_dimensions = fid.shape
-
-        #   self.periodicity            <= three-element tuple of booleans 0
-
         self.periodicity = 0
-
-        #   self.current_time           <= simulation time in code units 0
-
         self.current_time = 0
-
-        #
-        # We also set up cosmological information.  Set these to zero if
-        # non-cosmological.
-        #
-        #   self.cosmological_simulation    <= int, 0 or 1
-        #   self.current_redshift           <= float
-        #   self.omega_lambda               <= float
-        #   self.omega_matter               <= float
-        #   self.hubble_constant            <= float
-
         self.cosmological_simulation =  0
         self.current_redshift  = 0
         self.omega_lambda = 0
